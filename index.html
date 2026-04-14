@@ -104,7 +104,6 @@
         .negative { color: #ff3333; text-shadow: 0 0 10px rgba(255,51,51,0.3); }
         .neutral { color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.3); }
 
-        /* BRAND SECTION PINNED TO BOTTOM LEFT */
         .brand {
             position: absolute;
             bottom: 30px;
@@ -113,7 +112,7 @@
         }
 
         .credit-line {
-            font-size: 0.65rem; /* Increased by 1pt (from 0.55rem) */
+            font-size: 0.65rem; 
             color: var(--accent-blue);
             letter-spacing: 3px;
             text-transform: uppercase;
@@ -179,25 +178,17 @@
             let newsDiv, scoreDiv, loadDiv, entropyDiv, confDiv, statusLabel;
             let tickerAlpha = 0, fadeState = "IN", stayCounter = 0, currentNewsIndex = 0;
 
+            // LATEST NEWS AS OF APRIL 14, 2026
             const newsItems = [
-                { text: "[WAR] Iran War Ceasefire ratified: Reopening of the Strait of Hormuz signals major de-escalation", score: 14.50, type: "pos", sector: "war" },
-                { text: "[WAR] Iranian drone strikes on data centers in UAE disrupt global cloud infrastructure", score: -13.80, type: "neg", sector: "war" },
-                { text: "[SOCIAL] Landmark legislation passed: Global equal pay mandate adopted by 40 nations", score: 13.50, type: "pos", sector: "social" },
-                { text: "[SOCIAL] Record number of women tech entrepreneurs secure venture funding in Q1", score: 11.20, type: "pos", sector: "social" },
-                { text: "[SOCIAL] Humanitarian crisis: Female education access severely restricted in conflict zones", score: -12.40, type: "neg", sector: "social" },
-                { text: "[SOCIAL] UN Report: Healthcare disparity for women in rural areas reaches critical levels", score: -8.50, type: "neg", sector: "social" },
-                { text: "[TECH] Agentic AI safety protocols adopted by G7 nations to prevent autonomous escalation", score: 9.20, type: "pos", sector: "tech" },
-                { text: "[TECH] Massive data breach at 'Mercor' exposes biometrics of 40 million users", score: -14.10, type: "neg", sector: "tech" },
-                { text: "[TECH] Deepfake 'CEO Fraud' scam costs multinational firm $250M in authorized transfers", score: -12.50, type: "neg", sector: "tech" },
-                { text: "[TECH] First human-brain-computer link for complete paralysis treatment approved", score: 14.90, type: "pos", sector: "tech" },
-                { text: "[HEALTH] WHO declares 'Loneliness' a global healthcare priority as remote isolation peaks", score: -4.10, type: "neu", sector: "health" },
-                { text: "[HEALTH] Global fund for Rare Diseases hits $5B target; orphan drug access expanded", score: 11.20, type: "pos", sector: "health" },
-                { text: "[HEALTH] mRNA cancer vaccine results show 85% remission in late-stage trials", score: 15.00, type: "pos", sector: "health" },
-                { text: "[ECON] Global Stock Markets crash as 'Nifty50' and 'Sensex' tank over 3% in single session", score: -14.50, type: "neg", sector: "econ" },
-                { text: "[ECON] India sees record transition to Natural Gas, reducing LPG dependency by 40%", score: 8.90, type: "pos", sector: "econ" },
-                { text: "[ECON] Consumer Confidence rises in Asia as manufacturing output hits 5-year high", score: 9.40, type: "pos", sector: "econ" },
-                { text: "[SCAM] Crypto 'Pig Butchering' networks dismantled in SE Asia; $2B in assets seized", score: 11.50, type: "pos", sector: "scam" },
-                { text: "[SCAM] New AI-powered phishing wave targets elderly with high-fidelity 'Voice Clones'", score: -11.90, type: "neg", sector: "scam" }
+                { text: "[WAR] Strait of Hormuz Blockade enters 72nd hour; global energy markets face 'historic shock' as oil breaches $100", score: -14.80, type: "neg", sector: "war" },
+                { text: "[ECON] IMF releases 2026 Growth Forecast: War in West Asia shadow prompts deep downgrades across G20 nations", score: -13.20, type: "neg", sector: "econ" },
+                { text: "[HEALTH] Global milestone: First Approved Human-Brain-Computer Link treatment for complete paralysis begins commercial rollout", score: 14.90, type: "pos", sector: "health" },
+                { text: "[TECH] Semafor World Economy: D-Wave CEO Alan Baratz highlights transition to 'Commercial Quantum' for global AI infrastructure", score: 12.40, type: "pos", sector: "tech" },
+                { text: "[SOCIAL] Landmark Study: Environmental pesticide exposure mapped globally, revealing robust spatial link to cancer clusters", score: -9.50, type: "neu", sector: "social" },
+                { text: "[ENERGY] IEA releases 400M barrels from reserves; signals 80% capacity remains to stabilize global fuel supply", score: 11.20, type: "pos", sector: "energy" },
+                { text: "[TECH] World Quantum Day 2026: G7 nations adopt new safety protocols to manage autonomous AI-Agent escalations", score: 9.80, type: "pos", sector: "tech" },
+                { text: "[ECON] India shifts toward Natural Gas: LPG dependency drops 40% as 2026 energy transition targets are met early", score: 10.50, type: "pos", sector: "econ" },
+                { text: "[SCAM] ED in West Bengal arrests high-profile directors in multi-state coal extraction syndicate", score: -11.40, type: "neg", sector: "scam" }
             ];
 
             s.setup = () => {
