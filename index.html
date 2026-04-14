@@ -1,1 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Chakra Global Energy Monitor</title>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+   <style>
+       :root {
+           --bg-color: #0f1116;
+           --panel-bg: rgba(15, 20, 30, 0.85);
+           --accent-blue: #00ffff;
+           --text-main: #e0e6ed;
+           --text-dim: #8892b0;
+           --border-color: rgba(0, 255, 255, 0.15);
+       }
 
+       body, html {
+           margin: 0;
+           padding: 0;
+           overflow: hidden;
+           background-color: var(--bg-color);
+           color: var(--text-main);
+           font-family: 'Segoe UI', 'Courier New', monospace;
+       }
+
+       #ui-overlay {
+           position: absolute;
+           top: 0;
+           left: 0;
+           width: 100%;
+           height: 100%;
+           pointer-events: none;
+           z-index: 10;
+           display: flex;
+           flex-direction: column;
+           justify-content: space-between;
+           padding: 30px;
+           box-sizing: border-box;
+       }
+
+       .panel {
+           background: var(--panel-bg);
+           backdrop-filter: blur(15px);
+           border: 1px solid var(--border-color);
+           border-radius: 2px;
+           padding: 20px;
+           pointer-events: auto;
+           box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+       }
+
+       .top-panel {
+           max-width: 550px;
+           border-left: 3px solid var(--accent-blue);
+       }
+
+       #status-label {
+           font-size: 0.65rem;
+           text-transform: uppercase;
+           letter-spacing: 3px;
+           color: var(--accent-blue);
+           margin-bottom: 10px;
+           display: block;
+           opacity: 0.8;
+       }
+
+       #news-display {
+           font-size: 1.15rem;
+           font-weight: 400;
+           line-height: 1.5;
+           min-height: 4.5em;
+           transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+       }
+
+       .side-panel {
+           position: absolute;
+           left: 30px;
+           top: 260px;
+           width: 240px;
+       }
+
+       .metric {
+           margin-bottom: 22px;
+           border-bottom: 1px solid rgba(255,255,255,0.05);
+           padding-bottom: 8px;
+       }
+
+       .metric-label {
+           display: block;
+           font-size: 0.6rem;
+           color: var(--text-dim);
+           text-transform: uppercase;
+           letter-spacing: 1px;
+           margin-bottom: 5px;
+       }
+
+       .metric-value {
+           font-size: 1.1rem;
+           font-family: 'Courier New', monospace;
+           color: var(--text-main);
+       }
+
+       .positive { color: #00ffcc; text-shadow: 0 0 10px rgba(0,255,204,0.3); }
+       .negative { color: #ff3333; text-shadow: 0 0 10px rgba(255,51,51,0.3); }
+       .neutral { color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.3); }
+
+       .brand {
+           position: absolute;
+           bottom: 30px;
+           right: 30px;
+           text-align: right;
+       }
+
+       .brand h1 {
+           margin: 0;
+           font-weight: 100;
+           font-size: 1.4rem;
+           letter-spacing: 6px;
+           color: var(--text-dim);
+       }
+       
+       /* FOOTER CREDIT STYLE */
+       .credit-line {
+           font-size: 0.55rem; 
+           color: var(--accent-blue);
+           letter-spacing: 2px;
+           margin-top: 5px;
+           text-transform: uppercase;
+       }
+
+       @media (max-width: 768px) {
+           #ui-overlay { padding: 15px; }
+           .side-panel { top: auto; bottom: 100px; width: calc(100% - 30px); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; left: 15px; }
+           #news-display { font-size: 1rem; }
+           .metric { margin-bottom: 5px; padding-bottom: 2px; }
+       }
+   </style>
+</head>
+<body>
+
+   <div id="ui-overlay">
+       <div class="panel top-panel">
+           <span id="status-label">Global Resonance Sync...</span>
+           <div id="news-display">Scanning Global News-Grid...</div>
+       </div>
+
+       <div class="panel side-panel">
+           <div class="metric">
+               <span class="metric-label">Impact Vector</span>
+               <span id="ml-score" class="metric-value">---</span>
+           </div>
+           <div class="metric">
+               <span class="metric-label">Vibrational Load</span>
+               <span id="ml-load" class="metric-value">0%</span>
+           </div>
+           <div class="metric">
+               <span class="metric-label">Macro Entropy</span>
+               <span id="ml-entropy" class="metric-value">0.000 bits</span>
+           </div>
+           <div class="metric">
+               <span class="metric-label">Sync Confidence</span>
+               <span id="ml-conf" class="metric-value">0.0%</span>
+           </div>
+       </div>
+
+       <div class="brand">
+           <h1>CHAKRA_CORE.v2</h1>
+           <div style="font-size: 0.55rem; color: var(--text-dim); letter-spacing: 1px;">MODULAR SECTOR MONITORING</div>
+           <div class="credit-line">Created by charukalia@</div>
+       </div>
+   </div>
+
+   <script>
+       const sketch = (s) => {
+           let circleAlpha = 12;
+           let intensity = 0.2, targetIntensity = 0.2;
+           let bgSpeed = 0.0002, targetSpeed = 0.0002;
+           let globalColorOverride = null;
+           let isPositive = false;
+          
+           let stars = [];
+
+           let chakraColors = [[255,50,50],[255,105,180],[255,215,0],[0,255,120],[0,180,255],[176,191,26],[200,80,255]];
+           const originalColors = [[255,50,50],[255,105,180],[255,215,0],[0,255,120],[0,180,255],[176,191,26],[200,80,255]];
+           const petalCounts = [4, 6, 10, 12, 16, 2, 80];
+           const anatomicalY = [340, 230, 120, 10, -100, -210, -320];
+
+           let newsDiv, scoreDiv, loadDiv, entropyDiv, confDiv, statusLabel;
+           let tickerAlpha = 0, fadeState = "IN", stayCounter = 0, currentNewsIndex = 0;
+
+           const newsItems = [
+               { text: "[WAR] Iran War Ceasefire ratified: Reopening of the Strait of Hormuz signals major de-escalation", score: 14.50, type: "pos", sector: "war" },
+               { text: "[WAR] Iranian drone strikes on data centers in UAE disrupt global cloud infrastructure", score: -13.80, type: "neg", sector: "war" },
+               { text: "[SOCIAL] Landmark legislation passed: Global equal pay mandate adopted by 40 nations", score: 13.50, type: "pos", sector: "social" },
+               { text: "[SOCIAL] Record number of women tech entrepreneurs secure venture funding in Q1", score: 11.20, type: "pos", sector: "social" },
+               { text: "[SOCIAL] Humanitarian crisis: Female education access severely restricted in conflict zones", score: -12.40, type: "neg", sector: "social" },
+               { text: "[SOCIAL] UN Report: Healthcare disparity for women in rural areas reaches critical levels", score: -8.50, type: "neg", sector: "social" },
+               { text: "[TECH] Agentic AI safety protocols adopted by G7 nations to prevent autonomous escalation", score: 9.20, type: "pos", sector: "tech" },
+               { text: "[TECH] Massive data breach at 'Mercor' exposes biometrics of 40 million users", score: -14.10, type: "neg", sector: "tech" },
+               { text: "[TECH] Deepfake 'CEO Fraud' scam costs multinational firm $250M in authorized transfers", score: -12.50, type: "neg", sector: "tech" },
+               { text: "[TECH] First human-brain-computer link for complete paralysis treatment approved", score: 14.90, type: "pos", sector: "tech" },
+               { text: "[HEALTH] WHO declares 'Loneliness' a global healthcare priority as remote isolation peaks", score: -4.10, type: "neu", sector: "health" },
+               { text: "[HEALTH] Global fund for Rare Diseases hits $5B target; orphan drug access expanded", score: 11.20, type: "pos", sector: "health" },
+               { text: "[HEALTH] mRNA cancer vaccine results show 85% remission in late-stage trials", score: 15.00, type: "pos", sector: "health" },
+               { text: "[ECON] Global Stock Markets crash as 'Nifty50' and 'Sensex' tank over 3% in single session", score: -14.50, type: "neg", sector: "econ" },
+               { text: "[ECON] India sees record transition to Natural Gas, reducing LPG dependency by 40%", score: 8.90, type: "pos", sector: "econ" },
+               { text: "[ECON] Consumer Confidence rises in Asia as manufacturing output hits 5-year high", score: 9.40, type: "pos", sector: "econ" },
+               { text: "[SCAM] Crypto 'Pig Butchering' networks dismantled in SE Asia; $2B in assets seized", score: 11.50, type: "pos", sector: "scam" },
+               { text: "[SCAM] New AI-powered phishing wave targets elderly with high-fidelity 'Voice Clones'", score: -11.90, type: "neg", sector: "scam" }
+           ];
+
+           s.setup = () => {
+               s.createCanvas(s.windowWidth, s.windowHeight, s.WEBGL);
+               s.setAttributes('antialias', true);
+              
+               newsDiv = document.getElementById('news-display');
+               scoreDiv = document.getElementById('ml-score');
+               loadDiv = document.getElementById('ml-load');
+               entropyDiv = document.getElementById('ml-entropy');
+               confDiv = document.getElementById('ml-conf');
+               statusLabel = document.getElementById('status-label');
+
+               for(let i=0; i<600; i++) {
+                   stars.push({
+                       x: s.random(-s.width * 2, s.width * 2),
+                       y: s.random(-s.height * 2, s.height * 2),
+                       z: s.random(-1500, -200),
+                       size: s.random(0.5, 2.0),
+                       seed: s.random(1000)
+                   });
+               }
+           };
+
+           s.draw = () => {
+               s.background(15, 17, 22);
+               intensity = s.lerp(intensity, targetIntensity, 0.015);
+               bgSpeed = s.lerp(bgSpeed, targetSpeed, 0.015);
+              
+               updateTerminalLogic();
+               drawStarfield();
+
+               let xOff = s.width > 800 ? 280 : 0;
+               let zOff = s.width > 800 ? -200 : -400;
+               s.translate(xOff, 0, zOff);
+
+               for (let i = 0; i < 7; i++) {
+                   s.push();
+                   s.translate(0, anatomicalY[i], 0);
+                   let phase = s.frameCount * 0.01 + (i * 0.8);
+                   let pulse = s.sin(phase);
+
+                   let target;
+                   if (globalColorOverride) {
+                       target = globalColorOverride;
+                   } else {
+                       target = originalColors[i];
+                   }
+
+                   if (isPositive) {
+                       let h = (s.frameCount + i * 30) % 360;
+                       s.colorMode(s.HSB);
+                       let c = s.color(h, 80, 100);
+                       target = [s.red(c), s.green(c), s.blue(c)];
+                       s.colorMode(s.RGB);
+                   }
+
+                   for(let c=0; c<3; c++) {
+                       chakraColors[i][c] = s.lerp(chakraColors[i][c], target[c], 0.01);
+                   }
+                   let activeColor = chakraColors[i];
+
+                   s.push();
+                   s.noFill();
+                   s.stroke(51, 51, 51, circleAlpha);
+                   s.strokeWeight(0.5);
+                   s.rotateZ(s.frameCount * -0.002);
+                   s.ellipse(0, 0, 199 + pulse * 4);
+                   s.pop();
+
+                   s.push();
+                   s.rotateY(s.frameCount * bgSpeed + (i * 0.12));
+                   s.noFill();
+                   s.stroke(activeColor[0], activeColor[1], activeColor[2], 160);
+                   s.strokeWeight(1.0 + intensity * 0.3);
+                   for (let j = 0; j < 3; j++) {
+                       let r = 59 + (j * 15);
+                       s.beginShape();
+                       for (let a = 0; a < s.TWO_PI; a += 0.1) {
+                           let rd = r + (s.sin(a * petalCounts[i]) * 10) + (pulse * 2.2);
+                           s.vertex(rd * s.cos(a), rd * s.sin(a), s.cos(phase + a) * (intensity * 12));
+                       }
+                       s.endShape(s.CLOSE);
+                   }
+                   s.pop();
+
+                   s.push();
+                   s.fill(activeColor[0], activeColor[1], activeColor[2], 120 + (intensity * 40));
+                   s.noStroke();
+                   s.rotateZ(s.frameCount * 0.012);
+                   renderYantra(i, 26);
+                   s.pop();
+                   s.pop();
+               }
+           };
+
+           function drawStarfield() {
+               s.push();
+               s.noFill();
+               for (let star of stars) {
+                   let twinkle = s.sin(s.frameCount * 0.02 + star.seed);
+                   let alpha = s.map(twinkle, -1, 1, 15, 75);
+                   s.stroke(180, 190, 210, alpha);
+                   s.strokeWeight(star.size);
+                   let driftX = s.frameCount * 0.06;
+                   let xPos = ((star.x + driftX + s.width * 5) % (s.width * 5)) - s.width * 2.5;
+                   s.point(xPos, star.y, star.z);
+               }
+               s.pop();
+           }
+
+           function renderYantra(idx, sz) {
+               if(idx == 0) s.box(sz);
+               else if(idx == 1) { s.rotateZ(s.HALF_PI); s.arc(0, 0, sz * 1.8, sz * 1.8, 0, s.PI); }
+               else if(idx == 2) drawTri(sz, true);
+               else if(idx == 3) { drawTri(sz, true); drawTri(sz, false); }
+               else if(idx == 4) { s.ellipse(0, 0, sz * 1.4, sz * 1.4); drawTri(sz * 0.7, true); }
+               else if(idx == 5) drawTri(sz * 1.2, true);
+               else s.sphere(sz/1.2, 24, 24);
+           }
+
+           function drawTri(sz, inv) {
+               s.beginShape();
+               let m = inv ? 1 : -1;
+               s.vertex(0, sz * m); s.vertex(-0.86 * sz, -0.5 * sz * m); s.vertex(0.86 * sz, -0.5 * sz * m);
+               s.endShape(s.CLOSE);
+           }
+
+           function updateTerminalLogic() {
+               let currentItem = newsItems[currentNewsIndex];
+               if (fadeState === "IN") {
+                   tickerAlpha += 0.01;
+                   if (tickerAlpha >= 1) {
+                       fadeState = "STAY";
+                       applyWorldEnergy(currentItem);
+                       if(statusLabel) statusLabel.innerHTML = "SECTOR SCAN ACTIVE";
+                   }
+               } else if (fadeState === "STAY") {
+                   stayCounter++;
+                   if (stayCounter > 300) { fadeState = "OUT"; stayCounter = 0; }
+               } else if (fadeState === "OUT") {
+                   tickerAlpha -= 0.01;
+                   globalColorOverride = null;
+                   isPositive = false;
+                   targetIntensity = 0.2;
+                   targetSpeed = 0.0001;
+                   if(statusLabel) statusLabel.innerHTML = "RE-CALIBRATING FEED...";
+                   if (tickerAlpha <= 0) {
+                       currentNewsIndex = (currentNewsIndex + 1) % newsItems.length;
+                       fadeState = "IN";
+                   }
+               }
+               if(newsDiv) {
+                   newsDiv.innerHTML = currentItem.text;
+                   newsDiv.style.opacity = tickerAlpha;
+                   newsDiv.style.filter = `blur(${(1 - tickerAlpha) * 4}px)`;
+               }
+               if(scoreDiv) {
+                   let scoreTxt = (tickerAlpha > 0.8 ? (currentItem.score > 0 ? "+" : "") + currentItem.score.toFixed(2) : "---");
+                   scoreDiv.innerHTML = scoreTxt;
+                   scoreDiv.className = `metric-value ${currentItem.type === 'pos' ? 'positive' : currentItem.type === 'neg' ? 'negative' : 'neutral'}`;
+               }
+               if(loadDiv) loadDiv.innerHTML = Math.floor(intensity * 100) + "%";
+               if(entropyDiv) entropyDiv.innerHTML = (1.15 + s.noise(s.frameCount * 0.02) * 0.5).toFixed(3) + " bits";
+               if(confDiv) {
+                   let c = (98.5 - (intensity * 2.5) - s.noise(s.frameCount * 0.04) * 1.5);
+                   confDiv.innerHTML = (tickerAlpha > 0.8 ? c.toFixed(1) + "%" : "SYNCING...");
+               }
+           }
+
+           function applyWorldEnergy(event) {
+               if (event.type === "pos") {
+                   isPositive = true;
+                   globalColorOverride = null;
+               } else if (event.type === "neg") {
+                   isPositive = false;
+                   globalColorOverride = [255, 30, 30];
+               } else {
+                   isPositive = false;
+                   globalColorOverride = [255, 215, 0];
+               }
+
+               targetIntensity = s.map(Math.abs(event.score), 0, 15, 0.3, 1.4);
+               targetSpeed = (event.score < 0) ? 0.0007 : (event.score > 10) ? 0.0004 : 0.0002;
+           }
+
+           s.windowResized = () => {
+               s.resizeCanvas(s.windowWidth, s.windowHeight);
+               stars = [];
+               for(let i=0; i<600; i++) {
+                   stars.push({
+                       x: s.random(-s.width * 2, s.width * 2),
+                       y: s.random(-s.height * 2, s.height * 2),
+                       z: s.random(-1500, -200),
+                       size: s.random(0.5, 2.0),
+                       seed: s.random(1000)
+                   });
+               }
+           };
+       };
+       new p5(sketch);
+   </script>
+</body>
+</html>
