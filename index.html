@@ -104,7 +104,7 @@
         .negative { color: #ff3333; text-shadow: 0 0 10px rgba(255,51,51,0.3); }
         .neutral { color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.3); }
 
-        /* UPDATED BRAND POSITIONING TO BOTTOM-LEFT */
+        /* BRAND SECTION PINNED TO BOTTOM LEFT */
         .brand {
             position: absolute;
             bottom: 30px;
@@ -112,21 +112,13 @@
             text-align: left;
         }
 
-        .brand h1 {
-            margin: 0;
-            font-weight: 100;
-            font-size: 1.4rem;
-            letter-spacing: 6px;
-            color: var(--text-dim);
-        }
-
         .credit-line {
-            font-size: 0.55rem; 
+            font-size: 0.65rem; /* Increased by 1pt (from 0.55rem) */
             color: var(--accent-blue);
-            letter-spacing: 2px;
-            margin-top: 5px;
+            letter-spacing: 3px;
             text-transform: uppercase;
             text-align: left;
+            opacity: 0.9;
         }
 
         @media (max-width: 768px) {
@@ -165,7 +157,6 @@
         </div>
 
         <div class="brand">
-            <h1>CHAKRA_CORE.v2</h1>
             <div class="credit-line">Created by charukalia@</div>
         </div>
     </div>
